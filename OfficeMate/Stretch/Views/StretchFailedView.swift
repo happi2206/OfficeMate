@@ -20,8 +20,7 @@ struct StretchFailedView: View {
                 .padding(.top, 76)
             
             Text("You haven't finished all steps yet. \n Are you sure you want to exit?")
-                .font(.system(size: 18
-                             ))
+                .font(.system(size: 18))
                 .foregroundColor(.gray)
                 .lineSpacing(7)
                 .multilineTextAlignment(.center)

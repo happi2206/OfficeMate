@@ -1,31 +1,21 @@
-//
-//  Stretch_4_View.swift
-//  OfficeMate
-//
-//  Created by 王增凤 on 25/4/2025.
-//
-
 import SwiftUI
+
+// 导入所需的组件
 import UIKit
 
-struct Stretch_4_View: View {
-    @State private var timeRemaining: Int = 15
-    @State private var progress: CGFloat = 1.0
-    @State private var navigateToStretch5: Bool = false
-    @State private var showFailedView: Bool = false
+struct StretchExerciseView: View {
+    @ObservedObject var viewModel: StretchViewModel
     @Environment(\.dismiss) private var dismiss
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State private var isTimerPaused: Bool = false
     
     var body: some View {
         NavigationStack {
             ZStack {
                 VStack(spacing: 0) {
-                    
+                    // 导航栏
                     ZStack {
                         HStack {
                             Button(action: {
-                                showFailedView = true
+                                viewModel.showFailedView = true
                             }) {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 20))
@@ -35,7 +25,7 @@ struct Stretch_4_View: View {
                             Spacer()
                         }
                         
-                        Text("4/6")
+                        Text("\(viewModel.currentExerciseIndex + 1)/\(StretchExercise.exercises.count)")
                             .font(.system(size: 16))
                             .foregroundColor(.black)
                             .padding(.horizontal, 16)
@@ -45,50 +35,46 @@ struct Stretch_4_View: View {
                     }
                     .padding(.top, 16)
                     
-                 
-                    Text("Arm Raise Cheer")
+                    // 标题
+                    Text(viewModel.currentExercise.title)
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(Color(red: 0.2, green: 0.33, blue: 0.27))
                         .padding(.top, 40)
                     
-                    
-                    GIFImage(name: "arm_raise_cheer")
+                    // GIF 图片
+                    GIFImage(name: viewModel.currentExercise.gifName)
                         .frame(width: 262, height: 325)
                         .padding(.top, 60)
                     
                     Spacer()
                     
-                    
-                    Text("Raise your arms joyfully, \n then bring them back. Repeat slowly.")
+                    // 描述
+                    Text(viewModel.currentExercise.description)
                         .font(.system(size: 16))
                         .multilineTextAlignment(.center)
                         .foregroundColor(Color(red: 0.47, green: 0.47, blue: 0.47))
                         .padding(.bottom, 40)
                     
-                   
+                    // 倒计时
                     VStack(spacing: 6) {
-                       
                         ZStack(alignment: .leading) {
-                            
                             RoundedRectangle(cornerRadius: 7)
                                 .fill(Color(red: 0.93, green: 0.93, blue: 0.93))
                                 .frame(width: 240, height: 14)
                             
-                           
                             RoundedRectangle(cornerRadius: 7)
                                 .fill(Color(red: 0.43, green: 0.91, blue: 0.83))
-                                .frame(width: 240 * progress, height: 14)
+                                .frame(width: 240 * viewModel.progress, height: 14)
                         }
                         
-                        
-                        Text("\(timeRemaining)s")
+                        Text("\(viewModel.timeRemaining)s")
                             .font(.system(size: 24, weight: .semibold))
                             .foregroundColor(Color(red: 0.2, green: 0.33, blue: 0.27))
                     }
                     
-                   
+                    // 跳过按钮
                     Button(action: {
-                        navigateToStretch5 = true
+                        viewModel.skipExercise()
                     }) {
                         Text("Skip")
                             .font(.system(size: 16))
@@ -104,46 +90,30 @@ struct Stretch_4_View: View {
                 }
                 .background(Color.white)
                 
-                if showFailedView {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .overlay {
-                            StretchFailedView(isPresented: $showFailedView, onResume: {
-                                isTimerPaused = false
-                            })
-                        }
-                        .onAppear {
-                            isTimerPaused = true
-                        }
+                if viewModel.showFailedView {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                        StretchFailedView(isPresented: $viewModel.showFailedView, onResume: {
+                            viewModel.resumeTimer()
+                        })
+                    }
+                    .onAppear {
+                        viewModel.pauseTimer()
+                    }
                 }
             }
             .navigationBarHidden(true)
             .navigationBarBackButtonHidden()
-            .onReceive(timer) { _ in
-                if !isTimerPaused {
-                    if timeRemaining > 0 {
-                        timeRemaining -= 1
-                        withAnimation(.linear(duration: 1)) {
-                            progress = CGFloat(timeRemaining) / 15.0
-                        }
-                    } else {
-                        navigateToStretch5 = true
-                    }
+            .navigationDestination(isPresented: $viewModel.navigateToNext) {
+                if viewModel.isLastExercise {
+                    StretchSuccessView(onBackToHome: {
+                        dismiss()
+                    })
+                } else {
+                    StretchExerciseView(viewModel: viewModel)
                 }
-            }
-            .navigationDestination(isPresented: $navigateToStretch5) {
-                Stretch_5_View()
-            }
-            .onAppear {
-                timeRemaining = 15
-                progress = 1.0
             }
         }
     }
-}
-
-#Preview {
-    Stretch_4_View()
-}
-
-
+} 
