@@ -7,11 +7,7 @@
 
 import SwiftUI
 
-struct MoodOption: Identifiable, Equatable {
-    let id = UUID()
-    let emoji: String
-    let label: String
-}
+
 
 let moodOptions: [MoodOption] = [
     MoodOption(emoji: "😄", label: "Happy"),

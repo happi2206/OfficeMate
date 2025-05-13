@@ -9,9 +9,10 @@ import SwiftUI
 
 @main
 struct OfficeMateApp: App {
+    @StateObject var moodLogManager = MoodLogManager()
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            HomeView().environmentObject(moodLogManager) 
         }
     }
 }

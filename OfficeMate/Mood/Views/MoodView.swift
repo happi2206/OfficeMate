@@ -20,6 +20,7 @@ struct MoodViewSheet: View {
 
     var onLogMood: (MoodOption?, String, String) -> Void
 
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -38,8 +39,8 @@ struct MoodViewSheet: View {
                 Button(action: {
                     showConfirmation = true
                     onLogMood(selectedMood, thought, note)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showConfirmation = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2112) {
+//                        showConfirmation = false
                         dismiss()
                     }
                 }) {
@@ -73,8 +74,26 @@ struct MoodViewSheet: View {
                 Spacer()
             }
 
-            
-            if showConfirmation {
+            if showConfirmation, let mood = selectedMood {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+
+                MoodLoggedSuccessView(
+                    mood: MoodLog(
+                        date: Date(),
+                        emoji: mood.emoji,
+                        label: mood.label,
+                        thought: thought,
+                        note: note
+                    ),
+                    onClose: {
+                        showConfirmation = false
+                        dismiss()
+                    }
+                )
+
+
+                .zIndex(1)
                 VStack {
                     Spacer()
                     ToastView()
@@ -83,6 +102,8 @@ struct MoodViewSheet: View {
                 }
                 .animation(.easeInOut(duration: 0.3), value: showConfirmation)
             }
+
+
         }
         .background(Color(red: 0.96, green: 0.96, blue: 0.96))
         .ignoresSafeArea()

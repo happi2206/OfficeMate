@@ -6,35 +6,88 @@
 import SwiftUI
 
 struct HomeView: View {
+    
+    //    mood variables
+    @EnvironmentObject var moodLogManager: MoodLogManager
+    @State private var showMoodLoggedModal = false
+    @State private var openMoodScreen = false
+    @State private var todayMood: MoodLog?
+
+    @State private var showEmptyState = false
+    
+    @StateObject private var weatherVM = WeatherViewModel()
+    
     @State private var timeOfDay: TimeOfDay = .current()
     @StateObject private var stretchManager = StretchManager()
     @State private var showingStretchSettings = false
     @State private var showingStretchSequence = false
-    @State private var openMoodScreen = false
+    
     @State private var showingStretchEntry = false
     @State private var showWaterGoalSheet = false
     @State private var userWaterGoal: Int = UserDefaults.standard.integer(forKey: "waterGoal")
     @State private var userWaterDrunk: Int = UserDefaults.standard.integer(forKey: "waterDrunk")
     @State private var lastWaterUpdateDate: Date = UserDefaults.standard.object(forKey: "lastWaterUpdateDate") as? Date ?? Date()
     let timer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
-
+    
     func isSameDay(date1: Date, date2: Date) -> Bool {
         let calendar = Calendar.current
         return calendar.isDate(date1, inSameDayAs: date2)
     }
-
+    
     var body: some View {
         ZStack {
             Image(timeOfDay.backgroundImage)
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
+            
+            if showMoodLoggedModal, let mood = todayMood {
 
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .zIndex(1)
+                    .onTapGesture {
+                             showMoodLoggedModal = false
+                         }
+
+                VStack {
+                    
+                    MoodLoggedSuccessView(
+                        mood: mood,
+                        onClose: {
+                            showMoodLoggedModal = false
+                        },
+                        onSave:{updatedMood, updatedThought, updatedNote in
+                            todayMood = MoodLog(
+                                date: mood.date,
+                                emoji: updatedMood.emoji,
+                                label: updatedMood.label,
+                                thought: updatedThought,
+                                note: updatedNote
+                            )
+                            
+                            moodLogManager.updateLog(for: Date(), with: todayMood!)
+                            
+                        }
+                    )
+           
+                }
+                
+                
+                
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .zIndex(2)
+            }
+
+            
+            
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
                     HStack(spacing: 12) {
-                        Button(action: {}) {
+                        Button(action: {
+                            showEmptyState = true
+                        }) {
                             Image(systemName: "gearshape")
                                 .font(.system(size: 20))
                                 .foregroundColor(.black.opacity(0.5))
@@ -42,8 +95,8 @@ struct HomeView: View {
                         .frame(width: 44, height: 44)
                         .background(Color.white.opacity(0.3))
                         .cornerRadius(12)
-
-                        Button(action: {}) {
+                        
+                        Button(action: {showEmptyState = true}) {
                             Image(systemName: "chart.bar")
                                 .font(.system(size: 20))
                                 .foregroundColor(.black.opacity(0.5))
@@ -55,18 +108,27 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 80)
-
+                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Hi, Wonder")
                         .font(.system(size: 28, weight: .semibold))
-                    Text(timeOfDay.greeting)
+                    
+               
+                        Text(timeOfDay.greeting)
+                            .font(.system(size: 16))
+                            .foregroundColor(.black.opacity(0.6))
+                
+                        Text(weatherVM.temperatureText)
                         .font(.system(size: 16))
                         .foregroundColor(.black.opacity(0.6))
+                    
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
                 .padding(.top, 180)
-
+                
+             
+                  
                 VStack(spacing: 16) {
                     Button(action: {
                         showingStretchSettings = true
@@ -114,7 +176,7 @@ struct HomeView: View {
                         .cornerRadius(20)
                         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
                     }
-
+                    
                     Button(action: {
                         showWaterGoalSheet = true
                     }) {
@@ -191,13 +253,35 @@ struct HomeView: View {
                             UserDefaults.standard.set(lastWaterUpdateDate, forKey: "lastWaterUpdateDate")
                         })
                     }
-
                     
-                    Button(action: { openMoodScreen = true}) {
+                    
+                    //                    open mood screen.
+                    
+                    Button(action: {
+                        //                        if mood has already been logged
+                        if moodLogManager.hasLoggedToday,
+                           let mood = moodLogManager.logs.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                            todayMood = mood
+                            showMoodLoggedModal = true
+                        }
+                        else {
+                            openMoodScreen = true
+                        }
+                    }) {
+                        
                         HStack(spacing: 16) {
-                            Image("IconMoodNote")
-                                .resizable()
-                                .frame(width: 48, height: 48)
+                            Group {
+                                if let todayMood = moodLogManager.logs.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                                    Text(todayMood.emoji)
+                                        .font(.system(size: 36))
+                                        .frame(width: 48, height: 48)
+                                } else {
+                                    Image("IconMoodNote")
+                                        .resizable()
+                                        .frame(width: 48, height: 48)
+                                }
+                            }
+                            
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("MoodNote")
                                     .font(.system(size: 18, weight: .semibold))
@@ -217,10 +301,10 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
-
+                
                 Spacer()
             }
-
+            
             if showingStretchEntry {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
@@ -241,42 +325,67 @@ struct HomeView: View {
             .environmentObject(stretchManager)
         }
         
+        //        mood
+        
+        
         .sheet(isPresented: $openMoodScreen) {
-                     MoodViewSheet { mood, thought, note in
-                         // Handle mood logging
-                         print(mood?.label ?? "No mood")
-                         print(thought)
-                         print(note)
-                     }
-                 }
-        
-        
-        .fullScreenCover(isPresented: $showingStretchSequence) {
-            StretchSequenceView()
-                .environmentObject(stretchManager)
-        }
-        .onReceive(timer) { _ in
-            timeOfDay = .current()
-        }
-        .onChange(of: stretchManager.isTimerActive) { isActive in
-            if !isActive {
-                showingStretchEntry = true
+            MoodViewSheet { moodOption, thought, note in
+                if let mood = moodOption {
+                    let log = MoodLog(
+                        date: Date(),
+                        emoji: mood.emoji,
+                        label: mood.label,
+                        thought: thought,
+                        note: note
+                    )
+                    moodLogManager.addLog(log)
+                    todayMood = log
+                }
             }
-        }
-        .onAppear {
-            if !isSameDay(date1: lastWaterUpdateDate, date2: Date()) {
-                userWaterDrunk = 0
-                UserDefaults.standard.set(userWaterDrunk, forKey: "waterDrunk")
-                lastWaterUpdateDate = Date()
-                UserDefaults.standard.set(lastWaterUpdateDate, forKey: "lastWaterUpdateDate")
-            }
-        }
-    }
-}
 
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
+        }
+        
+ 
+        
+        .sheet(isPresented: $showEmptyState) {
+            EmptyStateView()
+        }
+        
+            
+            
+            
+            
+            .fullScreenCover(isPresented: $showingStretchSequence) {
+                StretchSequenceView()
+                    .environmentObject(stretchManager)
+            }
+            .onReceive(timer) { _ in
+                timeOfDay = .current()
+            }
+            .onChange(of: stretchManager.isTimerActive) { isActive in
+                if !isActive {
+                    showingStretchEntry = true
+                }
+            }
+            .onAppear {
+                weatherVM.fetchWeather()
+                if !isSameDay(date1: lastWaterUpdateDate, date2: Date()) {
+                    userWaterDrunk = 0
+                    UserDefaults.standard.set(userWaterDrunk, forKey: "waterDrunk")
+                    lastWaterUpdateDate = Date()
+                    UserDefaults.standard.set(lastWaterUpdateDate, forKey: "lastWaterUpdateDate")
+                }
+                if let mood = moodLogManager.logs.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                    todayMood = mood
+                }
+            }
+        }
     }
-}
+    
+    struct HomeView_Previews: PreviewProvider {
+        static var previews: some View {
+            HomeView().environmentObject(MoodLogManager())
+        }
+    }
+    
 
