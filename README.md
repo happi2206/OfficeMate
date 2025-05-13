@@ -1,10 +1,16 @@
 # OfficeMate
 
-OfficeMate is a health and wellness management iOS application developed using SwiftUI. The app is designed to help users build healthier habits by integrating stretching reminders, hydration tracking, and mood journaling into one intuitive interface. This project explores the usage of key iOS frameworks such as UserNotifications and CoreData, and implements features using the MVVM design pattern.
+OfficeMate is a mindfulness and wellbeing assistant designed for the modern workplace. It helps users track their mood, water intake, and stretch routines while promoting better mental and physical health habits. 
 
 ## GitHub Repository
 
 https://github.com/happi2206/OfficeMate
+
+## Contriubutors
+
+ - Zengfeng Wang
+ - Happiness Adeboye
+ - Changtong Chen
 
 ## Project Overview
 
@@ -19,8 +25,7 @@ OfficeMate promotes a balanced lifestyle by helping users:
 ### Stretch Reminders
 - Timed alerts based on customizable intervals
 - Visual guides for simple and effective stretches
-- Daily progress tracking with session history
-- Adjustable reminder frequency and notification preferences
+- Adjustable reminder frequency
 
 ### Water Management
 - Tracks daily water consumption
@@ -30,17 +35,21 @@ OfficeMate promotes a balanced lifestyle by helping users:
 
 ### Mood Tracking
 - Simple mood logging using emoji and text notes
-- Timeline to view emotional trends over time
-- Insights into factors influencing emotional state
+- View your recorded mood for the day
+- Edit your mood for the day
 - Mindfulness suggestions based on mood
+
+### Weather Info
+- Display current weather conditions on the home screen
 
 ## Tech Stack
 
-- Language: Swift 5.5+
+- Language: Swift 
 - UI Framework: SwiftUI
 - Architecture: MVVM
-- Data Storage: CoreData
-- Notifications: Local Notifications (UserNotifications)
+- UserDefaults
+- Combine – Reactive updates (e.g., Timer)
+- OpenWeatherMap API
 
 ## Requirements
 
